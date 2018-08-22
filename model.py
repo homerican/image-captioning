@@ -14,7 +14,7 @@ class EncoderCNN(nn.Module):
 		self.resnet = nn.Sequential(*modules)
 		self.linear = nn.Linear(resnet.fc.in_features, embed_size)
 		self.bn = nn.BatchNorm1d(embed_size, momentum=0.01)
-		
+
 	def forward(self, images):
 		"""Extract feature vectors from input images."""
 		with torch.no_grad():
@@ -34,18 +34,16 @@ class DecoderRNN(nn.Module):
 		self.lstm = my_LSTM(embed_size, hidden_size, num_layers, batch_first=True)
 		self.linear = nn.Linear(hidden_size, vocab_size)
 		self.max_seg_length = max_seq_length
-		
+
 	def forward(self, features, captions, lengths):
 		"""Decode image feature vectors and generates captions."""
 		embeddings = self.embed(captions)
 		embeddings = torch.cat((features.unsqueeze(1), embeddings), 1)
 		packed = pack_padded_sequence(embeddings, lengths, batch_first=True)
 		hiddens, _ = self.lstm(packed)
-		# uncomment this line to use the default setting
-		#outputs = self.linear(hiddens[0])
 		outputs = self.linear(hiddens)
 		return outputs
-	
+
 	def sample(self, features, states=None):
 		"""Generate captions for given image features using greedy search."""
 		sampled_ids = []
